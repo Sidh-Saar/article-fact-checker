@@ -6,22 +6,18 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { SectionReview } from '@/components/review/section-review';
 import { ChangeStats } from '@/components/review/change-summary';
 import { MarkdownOutput } from '@/components/export/markdown-output';
 import {
   ArrowLeft,
-  Check,
   CheckCheck,
   Download,
   Loader2,
-  FileText,
-  Link as LinkIcon,
 } from 'lucide-react';
-import type { ArticleWithRelations, ArticleSection, Change } from '@/types';
+import type { ArticleWithRelations, ArticleSection } from '@/types';
 
-export default function ArticleReviewPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ClientArticleReviewPage({ params }: { params: Promise<{ id: string; articleId: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const [article, setArticle] = useState<ArticleWithRelations | null>(null);
@@ -31,11 +27,11 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     fetchArticle();
-  }, [resolvedParams.id]);
+  }, [resolvedParams.articleId]);
 
   const fetchArticle = async () => {
     try {
-      const response = await fetch(`/api/articles/${resolvedParams.id}`);
+      const response = await fetch(`/api/articles/${resolvedParams.articleId}`);
       if (response.ok) {
         const data = await response.json();
         setArticle(data);
@@ -59,7 +55,7 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
     });
 
     try {
-      await fetch(`/api/articles/${resolvedParams.id}/approve`, {
+      await fetch(`/api/articles/${resolvedParams.articleId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approved_sections: [sectionId] }),
@@ -95,7 +91,7 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
   const handleApproveAll = async () => {
     setApproving(true);
     try {
-      const response = await fetch(`/api/articles/${resolvedParams.id}/approve`, {
+      const response = await fetch(`/api/articles/${resolvedParams.articleId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approved_sections: 'all' }),
@@ -150,7 +146,7 @@ export default function ArticleReviewPage({ params }: { params: Promise<{ id: st
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={`/articles/${resolvedParams.id}`}>
+                  <Link href={`/clients/${resolvedParams.id}/articles/${resolvedParams.articleId}`}>
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>

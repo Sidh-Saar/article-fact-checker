@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Users, Search, Settings, Trash2 } from 'lucide-react';
+import { Plus, Users, Search, Settings, Trash2, ArrowRight } from 'lucide-react';
 import type { Client, ComplianceType } from '@/types';
 import { FACT_CHECK_PROMPTS } from '@/lib/ai/fact-checker';
 
@@ -41,6 +41,7 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
   const [newClient, setNewClient] = useState({
     name: '',
     industry: '',
@@ -69,6 +70,7 @@ export default function ClientsPage() {
     if (!newClient.name) return;
 
     setCreating(true);
+    setError('');
     try {
       // Get default prompt based on compliance type
       const defaultPrompt = newClient.compliance_type !== 'none'
@@ -84,13 +86,18 @@ export default function ClientsPage() {
         }),
       });
 
-      if (response.ok) {
-        setCreateOpen(false);
-        setNewClient({ name: '', industry: '', compliance_type: 'none' });
-        fetchClients();
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || 'Failed to create client');
+        return;
       }
-    } catch (error) {
-      console.error('Error creating client:', error);
+
+      setCreateOpen(false);
+      setNewClient({ name: '', industry: '', compliance_type: 'none' });
+      fetchClients();
+    } catch (err) {
+      console.error('Error creating client:', err);
+      setError('Failed to create client. Please try again.');
     } finally {
       setCreating(false);
     }
@@ -122,7 +129,7 @@ export default function ClientsPage() {
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Clients</h1>
                 <p className="text-muted-foreground">
-                  Manage client-specific fact-checking prompts
+                  Manage clients, skills, and articles
                 </p>
               </div>
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -177,6 +184,9 @@ export default function ClientsPage() {
                         A default prompt template will be created based on this
                       </p>
                     </div>
+                    {error && (
+                      <p className="text-sm text-destructive">{error}</p>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setCreateOpen(false)}>
@@ -221,48 +231,50 @@ export default function ClientsPage() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredClients.map((client) => (
-                  <Card key={client.id} className="hover:border-primary/50 transition-colors">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{client.name}</CardTitle>
-                          {client.industry && (
-                            <CardDescription>{client.industry}</CardDescription>
+                  <Card key={client.id} className="hover:border-primary/50 transition-colors cursor-pointer">
+                    <Link href={`/clients/${client.id}`}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{client.name}</CardTitle>
+                            {client.industry && (
+                              <CardDescription>{client.industry}</CardDescription>
+                            )}
+                          </div>
+                          <div className="flex gap-1" onClick={(e) => e.preventDefault()}>
+                            <Button variant="ghost" size="icon" asChild>
+                              <Link href={`/clients/${client.id}/settings`}>
+                                <Settings className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleDelete(client.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-2">
+                          {client.compliance_type && client.compliance_type !== 'none' && (
+                            <Badge variant="secondary">{client.compliance_type}</Badge>
+                          )}
+                          {client.fact_check_prompt && (
+                            <Badge variant="outline">Custom Prompt</Badge>
                           )}
                         </div>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" asChild>
-                            <Link href={`/clients/${client.id}/prompt`}>
-                              <Settings className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(client.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                        <div className="mt-4 flex items-center text-sm text-muted-foreground">
+                          <span>View client</span>
+                          <ArrowRight className="ml-1 h-4 w-4" />
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-2">
-                        {client.compliance_type && client.compliance_type !== 'none' && (
-                          <Badge variant="secondary">{client.compliance_type}</Badge>
-                        )}
-                        {client.fact_check_prompt && (
-                          <Badge variant="outline">Custom Prompt</Badge>
-                        )}
-                      </div>
-                      <div className="mt-4">
-                        <Button variant="outline" size="sm" asChild className="w-full">
-                          <Link href={`/clients/${client.id}/prompt`}>
-                            Edit Fact-Check Prompt
-                          </Link>
-                        </Button>
-                      </div>
-                    </CardContent>
+                      </CardContent>
+                    </Link>
                   </Card>
                 ))}
               </div>

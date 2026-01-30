@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import type { ArticleWithRelations } from '@/types';
 
-export default function ArticleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ClientArticleDetailPage({ params }: { params: Promise<{ id: string; articleId: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const [article, setArticle] = useState<ArticleWithRelations | null>(null);
@@ -41,11 +41,11 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     fetchArticle();
-  }, [resolvedParams.id]);
+  }, [resolvedParams.articleId]);
 
   const fetchArticle = async () => {
     try {
-      const response = await fetch(`/api/articles/${resolvedParams.id}`);
+      const response = await fetch(`/api/articles/${resolvedParams.articleId}`);
       if (response.ok) {
         const data = await response.json();
         setArticle(data);
@@ -60,12 +60,12 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
   const handleVerify = async () => {
     setVerifying(true);
     try {
-      const response = await fetch(`/api/articles/${resolvedParams.id}/verify`, {
+      const response = await fetch(`/api/articles/${resolvedParams.articleId}/verify`, {
         method: 'POST',
       });
 
       if (response.ok) {
-        router.push(`/articles/${resolvedParams.id}/review`);
+        router.push(`/clients/${resolvedParams.id}/articles/${resolvedParams.articleId}/review`);
       }
     } catch (error) {
       console.error('Error verifying article:', error);
@@ -77,12 +77,12 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      const response = await fetch(`/api/articles/${resolvedParams.id}`, {
+      const response = await fetch(`/api/articles/${resolvedParams.articleId}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        router.push('/articles');
+        router.push(`/clients/${resolvedParams.id}/articles`);
       }
     } catch (error) {
       console.error('Error deleting article:', error);
@@ -132,7 +132,7 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href="/articles">
+                  <Link href={`/clients/${resolvedParams.id}/articles`}>
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -143,9 +143,6 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
                       {status.icon}
                       {status.label}
                     </Badge>
-                    {article.client && (
-                      <Badge variant="outline">{article.client.name}</Badge>
-                    )}
                     {article.skill && (
                       <span className="text-sm text-muted-foreground">
                         via {article.skill.name}
@@ -173,7 +170,7 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
                 )}
                 {article.status === 'verified' && (
                   <Button asChild>
-                    <Link href={`/articles/${article.id}/review`}>
+                    <Link href={`/clients/${resolvedParams.id}/articles/${article.id}/review`}>
                       <Eye className="mr-2 h-4 w-4" />
                       Review Changes
                     </Link>
@@ -248,12 +245,6 @@ export default function ArticleDetailPage({ params }: { params: Promise<{ id: st
                     <dt className="text-muted-foreground">Status</dt>
                     <dd className="font-medium">{status.label}</dd>
                   </div>
-                  {article.client && (
-                    <div>
-                      <dt className="text-muted-foreground">Client</dt>
-                      <dd className="font-medium">{article.client.name}</dd>
-                    </div>
-                  )}
                   {article.skill && (
                     <div>
                       <dt className="text-muted-foreground">Skill Used</dt>

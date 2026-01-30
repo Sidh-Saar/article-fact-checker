@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PromptEditor } from '@/components/clients/prompt-editor';
 import { ArrowLeft, Save, Loader2, Plus, X } from 'lucide-react';
 import type { Client, ComplianceType } from '@/types';
 
@@ -28,7 +27,17 @@ const COMPLIANCE_TYPES: { value: ComplianceType; label: string }[] = [
   { value: 'HIPAA', label: 'HIPAA' },
 ];
 
-export default function ClientPromptPage({ params }: { params: Promise<{ id: string }> }) {
+const DEFAULT_FACT_CHECK_PROMPT = `You are a fact-checking assistant. Review the following article section and:
+
+1. Verify all claims against reliable sources
+2. Add citations where needed using [1], [2], etc. format
+3. Flag any unsupported or potentially misleading statements
+4. Suggest corrections for factual errors
+5. Return the corrected text with inline citations
+
+Be thorough but preserve the original voice and style.`;
+
+export default function ClientSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const [client, setClient] = useState<Client | null>(null);
@@ -73,7 +82,7 @@ export default function ClientPromptPage({ params }: { params: Promise<{ id: str
       });
 
       if (response.ok) {
-        router.push('/clients');
+        router.push(`/clients/${resolvedParams.id}`);
       }
     } catch (error) {
       console.error('Error saving client:', error);
@@ -134,14 +143,14 @@ export default function ClientPromptPage({ params }: { params: Promise<{ id: str
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href="/clients">
+                  <Link href={`/clients/${resolvedParams.id}`}>
                     <ArrowLeft className="h-4 w-4" />
                   </Link>
                 </Button>
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight">{client.name}</h1>
-                  <p className="text-muted-foreground">
-                    Configure fact-checking settings
+                  <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+                  <p className="text-sm text-muted-foreground">
+                    {client.name} &middot; Configure fact-checking settings
                   </p>
                 </div>
               </div>
@@ -208,15 +217,21 @@ export default function ClientPromptPage({ params }: { params: Promise<{ id: str
               <CardHeader>
                 <CardTitle>Fact-Check Prompt</CardTitle>
                 <CardDescription>
-                  Customize the prompt sent to GPT-5.2 when fact-checking articles for this client
+                  Customize the prompt sent to GPT when fact-checking articles for this client.
+                  This prompt is used for each section of an article.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <PromptEditor
-                  value={client.fact_check_prompt || ''}
-                  onChange={(value) => setClient({ ...client, fact_check_prompt: value })}
-                  complianceType={client.compliance_type || undefined}
+              <CardContent className="space-y-4">
+                <Textarea
+                  value={client.fact_check_prompt || DEFAULT_FACT_CHECK_PROMPT}
+                  onChange={(e) => setClient({ ...client, fact_check_prompt: e.target.value })}
+                  rows={12}
+                  className="font-mono text-sm"
+                  placeholder={DEFAULT_FACT_CHECK_PROMPT}
                 />
+                <p className="text-xs text-muted-foreground">
+                  The article section content will be appended after this prompt.
+                </p>
               </CardContent>
             </Card>
 
@@ -233,7 +248,7 @@ export default function ClientPromptPage({ params }: { params: Promise<{ id: str
                   value={client.compliance_guidelines || ''}
                   onChange={(e) => setClient({ ...client, compliance_guidelines: e.target.value })}
                   rows={5}
-                  placeholder="e.g., Avoid mentioning competitor products by name..."
+                  placeholder="e.g., Avoid mentioning competitor products by name, ensure all medical claims have FDA citations..."
                 />
               </CardContent>
             </Card>

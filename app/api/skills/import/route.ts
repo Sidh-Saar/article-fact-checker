@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const category = formData.get('category') as string | null;
+    const clientId = formData.get('clientId') as string | null;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
       .from('skills')
       .insert({
         org_id: orgId,
+        client_id: clientId || null,
         name: parsed.name,
         description: parsed.description,
         prompt_text: parsed.promptText,

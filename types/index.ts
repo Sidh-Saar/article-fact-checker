@@ -36,6 +36,7 @@ export interface SkillVariable {
 export interface Skill {
   id: string;
   org_id: string;
+  client_id: string | null;
   name: string;
   description: string | null;
   prompt_text: string;

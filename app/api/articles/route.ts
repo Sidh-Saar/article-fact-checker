@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -12,7 +12,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: articles, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get('clientId');
+
+    let query = supabase
       .from('articles')
       .select(`
         *,
@@ -21,6 +24,13 @@ export async function GET() {
       `)
       .eq('created_by', user.id)
       .order('created_at', { ascending: false });
+
+    // Filter by client_id if provided
+    if (clientId) {
+      query = query.eq('client_id', clientId);
+    }
+
+    const { data: articles, error } = await query;
 
     if (error) throw error;
 

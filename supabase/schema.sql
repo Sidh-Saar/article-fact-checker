@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS clients (
 CREATE TABLE IF NOT EXISTS skills (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID REFERENCES organizations(id) ON DELETE CASCADE NOT NULL,
+  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
   description TEXT,
   prompt_text TEXT NOT NULL,
@@ -78,6 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_user_organizations_user_id ON user_organizations(
 CREATE INDEX IF NOT EXISTS idx_user_organizations_org_id ON user_organizations(org_id);
 CREATE INDEX IF NOT EXISTS idx_clients_org_id ON clients(org_id);
 CREATE INDEX IF NOT EXISTS idx_skills_org_id ON skills(org_id);
+CREATE INDEX IF NOT EXISTS idx_skills_client_id ON skills(client_id);
 CREATE INDEX IF NOT EXISTS idx_articles_org_id ON articles(org_id);
 CREATE INDEX IF NOT EXISTS idx_articles_created_by ON articles(created_by);
 CREATE INDEX IF NOT EXISTS idx_articles_client_id ON articles(client_id);
