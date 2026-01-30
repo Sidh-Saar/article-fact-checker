@@ -67,9 +67,11 @@ export async function POST(request: Request) {
 
       if (orgError) throw orgError;
 
-      await supabase
+      const { error: membershipError } = await supabase
         .from('user_organizations')
         .insert({ user_id: user.id, org_id: newOrg.id, role: 'admin' });
+
+      if (membershipError) throw membershipError;
 
       orgId = newOrg.id;
     }
