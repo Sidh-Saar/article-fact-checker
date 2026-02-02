@@ -116,7 +116,7 @@ export function SkillImporter({ onSuccess }: SkillImporterProps) {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileSelect}
-                accept=".json,.txt"
+                accept=".json,.txt,.skill"
                 className="hidden"
               />
               {selectedFile ? (
@@ -128,7 +128,7 @@ export function SkillImporter({ onSuccess }: SkillImporterProps) {
                 <div className="text-muted-foreground">
                   <Upload className="h-8 w-8 mx-auto mb-2" />
                   <p className="text-sm">Click to select a skill file</p>
-                  <p className="text-xs mt-1">Supports .json and .txt files</p>
+                  <p className="text-xs mt-1">Supports .json, .txt, and .skill files</p>
                 </div>
               )}
             </div>
